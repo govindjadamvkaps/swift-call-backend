@@ -1,8 +1,8 @@
-import 'dotenv/config';
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
+import "dotenv/config";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
 
 const app = express();
 const port = process.env.PORT;
@@ -10,20 +10,24 @@ const port = process.env.PORT;
 // Enable CORS for all routes
 app.use(cors());
 
-app.get('/', (req,res) => {
-  return res.status(200).json({success: true, message: "Socket api is running"})
-})
-app.get('/api/socket', (req,res) => {
-  return res.status(200).json({success: true, message: "Socket api is running"})
-})
+app.get("/", (req, res) => {
+  return res
+    .status(200)
+    .json({ success: true, message: "Socket api is running" });
+});
+app.get("/api/socket", (req, res) => {
+  return res
+    .status(200)
+    .json({ success: true, message: "Socket api is running" });
+});
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 var waiting_queue = [];
@@ -31,7 +35,7 @@ var active_sessions = [];
 var messages = {};
 var skipped_sessions = {};
 var active_sessions_users = {};
-
+console.log("messages", messages);
 io.on("connection", (socket) => {
   var user_token = socket.id;
   socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
@@ -114,11 +118,11 @@ io.on("connection", (socket) => {
     active_sessions.splice(active_sessions.indexOf(roomName), 1);
     messages[roomName] = [];
     socket.broadcast.to(roomName).emit("leave");
-      socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
-      socket.broadcast.emit("getWaitingRooms", {
-        waiting_queue,
-        active_sessions_users,
-      });
+    socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+    socket.broadcast.emit("getWaitingRooms", {
+      waiting_queue,
+      active_sessions_users,
+    });
     // io.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
   });
 
@@ -159,17 +163,68 @@ io.on("connection", (socket) => {
     // io.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
     // socket.leave(roomName);
     socket.broadcast
-        .to(roomName)
-        .emit("skipped_users", skipped_sessions[user_token]);
-      socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
-      socket.broadcast
-        .to(roomName)
-        .emit("getWaitingRooms", { waiting_queue, active_sessions_users });
-      socket.broadcast
-        .to(roomName)
-        .emit("getWaitingRooms", { waiting_queue, active_sessions_users });
-      socket.broadcast.to(roomName).emit("leave", waiting_queue);
-      socket.leave(roomName);
+      .to(roomName)
+      .emit("skipped_users", skipped_sessions[user_token]);
+    socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+    socket.broadcast
+      .to(roomName)
+      .emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+    socket.broadcast
+      .to(roomName)
+      .emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+    socket.broadcast.to(roomName).emit("leave", waiting_queue);
+    socket.leave(roomName);
+  });
+
+  socket.on("skip_state", (roomName) => {
+    if (waiting_queue?.length !== 0) {
+      // if (Object.keys(active_sessions_users).length !== 1) {
+      if (active_sessions_users[roomName]?.length === 2) {
+        active_sessions_users[roomName].pop();
+        waiting_queue.push(roomName);
+        // socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+        socket.to(roomName).emit("getWaitingRooms", {
+          waiting_queue,
+          active_sessions_users,
+        });
+      }
+      // }
+      // else {
+      //   socket.to(roomName).emit("getWaitingRooms", {
+      //     waiting_queue,
+      //     active_sessions_users,
+      //   });
+      // }
+    }
+  });
+
+  socket.on("end_call", (roomName) => {
+    if (active_sessions_users[roomName]?.length === 2) {
+      const waitingQueueFound =
+        waiting_queue?.length > 0 && waiting_queue?.includes(roomName);
+      active_sessions_users[roomName]?.pop();
+      if (!waitingQueueFound) {
+        waiting_queue.push(roomName);
+      }
+    } else {
+      const waitingQueueFound = waiting_queue?.length > 0;
+      waiting_queue?.includes(roomName);
+
+      if (roomName in active_sessions_users) {
+        delete active_sessions_users[roomName];
+      }
+
+      if (waitingQueueFound) {
+        const arrayListData = waiting_queue?.filter(
+          (queue) => queue !== roomName
+        );
+        waiting_queue = arrayListData;
+      }
+    }
+    socket.broadcast.emit("getWaitingRooms", {
+      waiting_queue,
+      active_sessions_users,
+    });
   });
 
   socket.on("message_send", (data) => {
