@@ -221,6 +221,7 @@ io.on("connection", (socket) => {
         waiting_queue = arrayListData;
       }
     }
+    socket.broadcast.to('ready',roomName)
     socket.broadcast.emit("getWaitingRooms", {
       waiting_queue,
       active_sessions_users,
