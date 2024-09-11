@@ -196,7 +196,7 @@ io.on("connection", (socket) => {
       //   });
       // }
     }
-    socket.to(roomName).emit('ready')
+    socket.to(roomName).emit('ready', roomName)
   });
 
   socket.on("end_call", (roomName) => {
