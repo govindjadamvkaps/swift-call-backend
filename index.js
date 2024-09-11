@@ -196,6 +196,7 @@ io.on("connection", (socket) => {
       //   });
       // }
     }
+    socket.to(roomName).emit('ready')
   });
 
   socket.on("end_call", (roomName) => {
@@ -221,7 +222,7 @@ io.on("connection", (socket) => {
         waiting_queue = arrayListData;
       }
     }
-    socket.to(roomName).emit('ready')
+    
     socket.broadcast.emit("getWaitingRooms", {
       waiting_queue,
       active_sessions_users,
