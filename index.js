@@ -176,58 +176,92 @@ io.on("connection", (socket) => {
     socket.leave(roomName);
   });
 
-  socket.on("skip_state", (roomName) => {
-    if (waiting_queue?.length !== 0) {
-      // if (Object.keys(active_sessions_users).length !== 1) {
-      if (active_sessions_users[roomName]?.length === 2) {
-        active_sessions_users[roomName].pop();
-        waiting_queue.push(roomName);
-        // socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
-        socket.to(roomName).emit("getWaitingRooms", {
-          waiting_queue,
-          active_sessions_users,
-        });
-      }
-      // }
-      // else {
-      //   socket.to(roomName).emit("getWaitingRooms", {
-      //     waiting_queue,
-      //     active_sessions_users,
-      //   });
-      // }
-    }
-    socket.to(roomName).emit('ready', roomName)
-  });
+  // socket.on("skip_state", (roomName) => {
+  //   if (waiting_queue?.length !== 0) {
+  //     // if (Object.keys(active_sessions_users).length !== 1) {
+  //     if (active_sessions_users[roomName]?.length === 2) {
+  //       active_sessions_users[roomName].pop();
+  //       waiting_queue.push(roomName);
+  //       // socket.emit("getWaitingRooms", { waiting_queue, active_sessions_users });
+  //       socket.to(roomName).emit("getWaitingRooms", {
+  //         waiting_queue,
+  //         active_sessions_users,
+  //       });
+  //     }
+  //     // }
+  //     // else {
+  //     //   socket.to(roomName).emit("getWaitingRooms", {
+  //     //     waiting_queue,
+  //     //     active_sessions_users,
+  //     //   });
+  //     // }
+  //   }
+  //   socket.to(roomName).emit('ready', roomName)
+  // });
 
-  socket.on("end_call", (roomName) => {
-    if (active_sessions_users[roomName]?.length === 2) {
-      const waitingQueueFound =
-        waiting_queue?.length > 0 && waiting_queue?.includes(roomName);
-      active_sessions_users[roomName]?.pop();
-      if (!waitingQueueFound) {
-        waiting_queue.push(roomName);
-      }
-    } else {
-      const waitingQueueFound = waiting_queue?.length > 0;
-      waiting_queue?.includes(roomName);
+  // socket.on("end_call", (roomName) => {
+  //   if (active_sessions_users[roomName]?.length === 2) {
+  //     const waitingQueueFound =
+  //       waiting_queue?.length > 0 && waiting_queue?.includes(roomName);
+  //     active_sessions_users[roomName]?.pop();
+  //     if (!waitingQueueFound) {
+  //       waiting_queue.push(roomName);
+  //     }
+  //   } else {
+  //     const waitingQueueFound = waiting_queue?.length > 0;
+  //     waiting_queue?.includes(roomName);
 
-      if (roomName in active_sessions_users) {
-        delete active_sessions_users[roomName];
-      }
+  //     if (roomName in active_sessions_users) {
+  //       delete active_sessions_users[roomName];
+  //     }
 
-      if (waitingQueueFound) {
-        const arrayListData = waiting_queue?.filter(
-          (queue) => queue !== roomName
-        );
-        waiting_queue = arrayListData;
-      }
-    }
+  //     if (waitingQueueFound) {
+  //       const arrayListData = waiting_queue?.filter(
+  //         (queue) => queue !== roomName
+  //       );
+  //       waiting_queue = arrayListData;
+  //     }
+  //   }
     
-    socket.broadcast.emit("getWaitingRooms", {
+  //   socket.broadcast.emit("getWaitingRooms", {
+  //     waiting_queue,
+  //     active_sessions_users,
+  //   });
+  // });
+
+  socket.on("skip_state", (roomName) => {
+    if (waiting_queue.length !== 0) {
+        if (active_sessions_users[roomName]?.length === 2) {
+            active_sessions_users[roomName].pop();
+            waiting_queue.push(roomName);
+            socket.to(roomName).emit("getWaitingRooms", {
+                waiting_queue,
+                active_sessions_users,
+            });
+        }
+    }
+    socket.to(roomName).emit('ready', roomName);
+});
+
+socket.on("end_call", (roomName) => {
+  if (active_sessions_users[roomName]?.length === 2) {
+      const waitingQueueFound = waiting_queue.includes(roomName);
+      active_sessions_users[roomName].pop();
+      if (!waitingQueueFound) {
+          waiting_queue.push(roomName);
+      }
+  } else {
+      if (roomName in active_sessions_users) {
+          delete active_sessions_users[roomName];
+      }
+      waiting_queue = waiting_queue.filter(queue => queue !== roomName);
+  }
+
+  socket.broadcast.emit("getWaitingRooms", {
       waiting_queue,
       active_sessions_users,
-    });
   });
+});
 
   socket.on("message_send", (data) => {
     console.log("message_send", data, Array.isArray(messages[data.roomName]));
