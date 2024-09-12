@@ -176,7 +176,7 @@ io.on("connection", (socket) => {
     socket.leave(roomName);
   });
 
-  socket.on("skip_state", (roomName) => {
+  socket.on("skip_state", ({ roomName, roomToJoin }) => {
     if (waiting_queue?.length !== 0) {
       // if (Object.keys(active_sessions_users).length !== 1) {
       if (active_sessions_users[roomName]?.length === 2) {
@@ -187,6 +187,7 @@ io.on("connection", (socket) => {
           waiting_queue,
           active_sessions_users,
         });
+        socket.to(roomToJoin).emit("ready", roomToJoin);
       }
       // }
       // else {
@@ -196,7 +197,6 @@ io.on("connection", (socket) => {
       //   });
       // }
     }
-    socket.to(roomName).emit('ready', roomName)
   });
 
   socket.on("end_call", (roomName) => {
@@ -222,7 +222,7 @@ io.on("connection", (socket) => {
         waiting_queue = arrayListData;
       }
     }
-    
+
     socket.broadcast.emit("getWaitingRooms", {
       waiting_queue,
       active_sessions_users,
