@@ -176,7 +176,7 @@ io.on("connection", (socket) => {
     socket.leave(roomName);
   });
 
-  socket.on("skip_state", ({ roomName, roomToJoin }) => {
+  socket.on("skip_state", (roomName) => {
     if (waiting_queue?.length !== 0) {
       // if (Object.keys(active_sessions_users).length !== 1) {
       if (active_sessions_users[roomName]?.length === 2) {
@@ -187,7 +187,7 @@ io.on("connection", (socket) => {
           waiting_queue,
           active_sessions_users,
         });
-        socket.to(roomToJoin).emit("ready", roomToJoin);
+        socket.to(roomName).emit("ready", roomName);
       }
       // }
       // else {
