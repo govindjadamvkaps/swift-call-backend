@@ -42,7 +42,6 @@ io.on("connection", (socket) => {
 
   // Triggered when a peer hits the join room button.
   socket.on("join", (roomName) => {
-    console.log("join", roomName);
     if (!roomName) return;
     const room = io.sockets.adapter.rooms.get(roomName);
 
@@ -94,30 +93,26 @@ io.on("connection", (socket) => {
 
   // Triggered when the person who joined the room is ready to communicate.
   socket.on("ready", (roomName) => {
-    console.log("ready", roomName);
     socket.broadcast.to(roomName).emit("ready"); // Informs the other peer in the room.
   });
 
   // Triggered when server gets an icecandidate from a peer in the room.
   socket.on("ice-candidate", (candidate, roomName) => {
-    console.log("candidate", candidate, "roomName", roomName);
+    console.log(candidate);
     socket.broadcast.to(roomName).emit("ice-candidate", candidate); // Sends Candidate to the other peer in the room.
   });
 
   // Triggered when server gets an offer from a peer in the room.
   socket.on("offer", (offer, roomName) => {
-    console.log("offer", offer, "roomName", roomName);
     socket.broadcast.to(roomName).emit("offer", offer); // Sends Offer to the other peer in the room.
   });
 
   // Triggered when server gets an answer from a peer in the room.
   socket.on("answer", (answer, roomName) => {
-    console.log("answer", answer, "roomName", roomName);
     socket.broadcast.to(roomName).emit("answer", answer); // Sends Answer to the other peer in the room.
   });
 
   socket.on("leave", (roomName) => {
-    console.log("Leave", roomName);
     socket.leave(roomName);
     waiting_queue.push(roomName);
     active_sessions.splice(active_sessions.indexOf(roomName), 1);
@@ -132,7 +127,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("onLeave", (roomName) => {
-    console.log("onLeave", roomName);
     let arr = [];
     console.log("roomName", roomName);
     arr = waiting_queue.filter((id) => id !== roomName);
@@ -151,7 +145,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("skip", (roomName) => {
-    console.log("skip", roomName);
     // waiting_queue.push(roomName);
     active_sessions.splice(active_sessions.indexOf(roomName), 1);
     messages[roomName] = [];
@@ -184,7 +177,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("skip_state", (roomName) => {
-    console.log("skip_state", roomName);
     if (waiting_queue?.length !== 0) {
       // if (Object.keys(active_sessions_users).length !== 1) {
       if (active_sessions_users[roomName]?.length === 2) {
@@ -207,7 +199,6 @@ io.on("connection", (socket) => {
   });
 
   socket.on("end_call", (roomName) => {
-    console.log("end_call", roomName);
     if (active_sessions_users[roomName]?.length === 2) {
       const waitingQueueFound =
         waiting_queue?.length > 0 && waiting_queue?.includes(roomName);
